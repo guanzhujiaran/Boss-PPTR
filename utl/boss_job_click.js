@@ -1,3 +1,4 @@
+const tool = require('./Tool');
 /**
  * 在网站里面点击职业页面，然后关闭
  * @param {String} url 
@@ -8,8 +9,9 @@ async function job_click(url, pptr) {
         if (pptr && url) {
             let bs = await pptr.page.browser();
             pptr.goto(url);
-            let list_json_resp = await (await pptr.page.waitForResponse(response => response.url().includes('zpgeek/recommend/job/list.json') && response.status() === 200)).json();
-            let pagenum = parseInt((list_json_resp.zpData.totalCount + list_json_resp.zpData.jobList.length + list_json_resp.zpData.pageSize - 1) / list_json_resp.zpData.pageSize)
+            let list_json_resp = await (await pptr.page.waitForResponse(response => response.url().includes('joblist.json?') && response.status() === 200)).json();
+            let pageSize = list_json_resp.zpData.pageSize ? list_json_resp.zpData.pageSize : list_json_resp.zpData.jobList.length;
+            let pagenum = parseInt((list_json_resp.zpData.totalCount + list_json_resp.zpData.jobList.length + pageSize - 1) / pageSize)
             let now_url = await pptr.page.url();
             if (now_url.includes('https://www.zhipin.com/web/user/safe/verify-slider')) {
                 console.error('遇到验证码，退出！');
@@ -35,6 +37,7 @@ async function job_click(url, pptr) {
                     }
                 }
                 await pptr.click('.ui-icon-arrow-right');
+                await tool.sleep(10e3)
                 url = await pptr.page.url();
             }
         } else {

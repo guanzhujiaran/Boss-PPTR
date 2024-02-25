@@ -19,4 +19,4 @@ dist/
 *.png
 /node_modules/
 UserData/
-
+./test/
