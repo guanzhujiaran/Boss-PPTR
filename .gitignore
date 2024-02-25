@@ -1,12 +1,8 @@
 __pycache__
 # *.go
-*.json
 test.py
 go.mod
-go.sum
 *.exe
-login_info.txt
-users.yaml
 *.tmp
 .venv
 *.csv
@@ -20,3 +16,4 @@ dist/
 /node_modules/
 UserData/
 ./test/
+.history
