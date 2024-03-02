@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2023-07-23 23:47:08
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-02-25 22:14:24
+ * @LastEditTime: 2024-03-02 21:43:43
  * @FilePath: \Boss直聘爬虫\utl\boss_job_click.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -16,11 +16,26 @@
  */
 const tool = require("./Tool");
 /**
+ * @typedef {Object} jobClickOption
+ * @property {boolean} isSendMsg - 是否直接点击“立即沟通”按钮
+ */
+
+const elementMap = {
+	start_chat_btn: "info-public",
+	job_card: ".job-card-wrapper",
+};
+
+/**
  * 在网站里面点击职业页面，然后关闭
  * @param {String} url
  * @param {import('./pptrHelper')} pptr
+ * @param {jobClickOption} options
  */
-async function job_click(url, pptr) {
+async function job_click(url, pptr, options = {}) {
+	let { isSendMsg } = options;
+	let click_element = isSendMsg
+		? elementMap.start_chat_btn
+		: elementMap.job_card;
 	try {
 		if (pptr && url) {
 			let bs = await pptr.page.browser();
@@ -66,7 +81,7 @@ async function job_click(url, pptr) {
 				console.warn("无需点击安全弹窗关闭按钮！");
 			}
 			for (let i = 0; i < pagenum; i++) {
-				await pptr.click(".job-card-wrapper", { ctrl_click: true });
+				await pptr.click(click_element, { ctrl_click: true });
 				for (let p of await bs.pages()) {
 					let u = await p.url();
 					if (u.includes(url)) {
