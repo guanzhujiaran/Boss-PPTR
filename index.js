@@ -18,7 +18,7 @@ let job_click_timer = 0;
 async function main(pptr) {
 
     await my_job_click('https://www.zhipin.com/web/geek/job?city=101020100&experience=101,102', pptr,{
-        isSendMsg:false//是否直接点“直接沟通按钮”发送消息
+        isSendMsg:true//是否直接点“直接沟通按钮”发送消息
     });
     job_click_timer++;
     console.log(`第${job_click_timer}轮已跑完！————${new Date().toLocaleString('fr-CA')}`);
