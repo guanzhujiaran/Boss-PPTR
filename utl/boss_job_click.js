@@ -23,6 +23,7 @@ const tool = require("./Tool");
 const elementMap = {
 	start_chat_btn: ".info-public",
 	job_card: ".job-card-wrapper",
+	chat_block_dialog: ".chat-block-dialog",
 };
 
 /**
@@ -126,6 +127,13 @@ async function job_click(url, pptr, options = {}) {
 										});
 								}
 							});
+						if (
+							(await pptr.page.$$(elementMap.chat_block_dialog))
+								.length > 0
+						) {
+							console.warn(`无法继续沟通`);
+							return;
+						}
 						console.log(
 							`执行完成第${els.indexOf(el)}/${
 								els.length
@@ -135,6 +143,13 @@ async function job_click(url, pptr, options = {}) {
 				});
 				if ((await pptr.page.$$(`.side-slogan-box`)).length > 0) {
 					console.log(`账号未登录`);
+					return;
+				}
+				if (
+					(await pptr.page.$$(elementMap.chat_block_dialog)).length >
+					0
+				) {
+					console.warn(`无法继续沟通，退出执行！`);
 					return;
 				}
 				for (let p of await bs.pages()) {
