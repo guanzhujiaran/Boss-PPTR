@@ -49,14 +49,21 @@ async function job_click(url, pptr, options = {}) {
 	try {
 		if (pptr && url) {
 			let bs = await pptr.page.browser();
-			pptr.goto(url);
-			let list_json_resp = await (
-				await pptr.page.waitForResponse(
-					(response) =>
-						response.url().includes("joblist.json?") &&
-						response.status() === 200
-				)
-			).json();
+			let list_json_resp;
+			await Promise.all([
+				pptr.goto(url),
+				tool.sleep(3e3),
+				pptr.page
+					.waitForResponse(
+						(response) =>
+							response.url().includes("joblist.json?") &&
+							response.status() === 200
+					)
+					.then(async (resp) => {
+						list_json_resp = await resp.json();
+					}),
+			]);
+
 			let pageSize = list_json_resp.zpData.pageSize
 				? list_json_resp.zpData.pageSize
 				: list_json_resp.zpData.jobList.length;
@@ -188,6 +195,9 @@ async function job_click(url, pptr, options = {}) {
 												);
 											});
 									}
+								})
+								.catch((e) => {
+									console.error(`点击沟通元素失败！\n${e}`);
 								});
 							if (
 								(

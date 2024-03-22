@@ -1,8 +1,7 @@
 const fs = require('fs');
+const { Page } = require('puppeteer-core');
 
-/**
- * @typedef {import('puppeteer-extra').Page} PuppeteerPage
- */
+
 
 /**
  * 封装了使用 Puppeteer 进行浏览器操作的工具类
@@ -10,9 +9,10 @@ const fs = require('fs');
 class PuppeteerActions {
     /**
      * 创建一个 PuppeteerActions 实例
-     * @param {PuppeteerPage} page - Puppeteer 页面对象
+     * @param {Page} page - Puppeteer 页面对象
      */
     constructor(page) {
+        /**@prop {Page} page - 浏览器页面handler*/
         this.page = page;
         this.defaultDelay = 1000; // 默认等待时间（毫秒）
         this.defaultTimeout = 5000; // 默认超时时间（毫秒）

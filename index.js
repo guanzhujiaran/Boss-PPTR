@@ -10,7 +10,7 @@ let pptraction = require("./utl/pptrHelper");
 let launchBrowser = require("./utl/pptrBrowserLauncher");
 let my_job_click = require("./utl/boss_job_click");
 let job_click_timer = 0;
-const fs = require('fs');
+const fs = require("fs");
 
 /**
  * 主函数
@@ -18,23 +18,29 @@ const fs = require('fs');
  */
 async function main(pptr) {
 	try {
-		let click_conf
-		try{
-			click_conf= JSON.parse(fs.readFileSync('./conf/globalconfig.json', 'utf8'));
-			if (typeof click_conf !='object' && click_conf.lenth==0){
-				throw new Error('配置文件格式错误！')
-			}
+		if ((await pptr.page.browser().pages()).length == 0) {
+			//浏览器已关闭
+			let bs = await launchBrowser("Browser_data", "Default");
+			let page = await bs.newPage();
+			pptr = new pptraction(page);
 		}
-		catch(e){
-			console.error(`读取点击配置失败！`)
-		
+		let click_conf;
+		try {
+			click_conf = JSON.parse(
+				fs.readFileSync("./conf/globalconfig.json", "utf8")
+			);
+			if (typeof click_conf != "object" && click_conf.lenth == 0) {
+				throw new Error("配置文件格式错误！");
+			}
+		} catch (e) {
+			console.error(`读取点击配置失败！`);
 		}
 		await my_job_click(
 			"https://www.zhipin.com/web/geek/job?city=101020100&experience=102,101,103&degree=203,202&areaBusiness=310101,310109,310106,310107,310105,310110",
 			pptr,
 			{
 				isSendMsg: true, //是否直接点“直接沟通按钮”发送消息
-				conf:click_conf
+				conf: click_conf,
 			}
 		);
 		job_click_timer++;
