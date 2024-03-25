@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2023-07-23 23:47:08
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-03-18 20:54:58
+ * @LastEditTime: 2024-03-25 14:35:48
  * @FilePath: \Boss直聘爬虫\utl\boss_job_click.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -48,22 +48,14 @@ async function job_click(url, pptr, options = {}) {
 	let job_apply_succ_counter = 0;
 	try {
 		if (pptr && url) {
-			let bs = await pptr.page.browser();
+			let bs = pptr.page.browser();
 			let list_json_resp;
-			await Promise.all([
-				pptr.goto(url),
-				tool.sleep(3e3),
-				pptr.page
-					.waitForResponse(
-						(response) =>
-							response.url().includes("joblist.json?") &&
-							response.status() === 200
+			pptr.page.goto(url)
+				list_json_resp =await (
+					await pptr.page.waitForResponse((resp) =>
+						resp.url().includes("joblist.json?")
 					)
-					.then(async (resp) => {
-						list_json_resp = await resp.json();
-					}),
-			]);
-
+				).json();
 			let pageSize = list_json_resp.zpData.pageSize
 				? list_json_resp.zpData.pageSize
 				: list_json_resp.zpData.jobList.length;
@@ -179,8 +171,8 @@ async function job_click(url, pptr, options = {}) {
 											)
 											.then(async (icon_close) => {
 												for (let p of await bs.pages()) {
-													let u = await p.url();
-													if (u.includes(url)) {
+													let u = p.url();
+													if (u.includes((new URL(url).pathname))) {
 														//关闭之前点击开的页面
 													} else {
 														await p.close();

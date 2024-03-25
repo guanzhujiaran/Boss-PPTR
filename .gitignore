@@ -17,3 +17,4 @@ dist/
 UserData/
 ./test/
 .history
+*.log
