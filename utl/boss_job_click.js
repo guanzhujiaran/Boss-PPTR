@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2023-07-23 23:47:08
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-03-25 14:35:48
+ * @LastEditTime: 2024-03-28 13:35:10
  * @FilePath: \Boss直聘爬虫\utl\boss_job_click.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -50,12 +50,12 @@ async function job_click(url, pptr, options = {}) {
 		if (pptr && url) {
 			let bs = pptr.page.browser();
 			let list_json_resp;
-			pptr.page.goto(url)
-				list_json_resp =await (
-					await pptr.page.waitForResponse((resp) =>
-						resp.url().includes("joblist.json?")
-					)
-				).json();
+			pptr.page.goto(url);
+			list_json_resp = await (
+				await pptr.page.waitForResponse((resp) =>
+					resp.url().includes("joblist.json?")
+				)
+			).json();
 			let pageSize = list_json_resp.zpData.pageSize
 				? list_json_resp.zpData.pageSize
 				: list_json_resp.zpData.jobList.length;
@@ -172,7 +172,12 @@ async function job_click(url, pptr, options = {}) {
 											.then(async (icon_close) => {
 												for (let p of await bs.pages()) {
 													let u = p.url();
-													if (u.includes((new URL(url).pathname))) {
+													if (
+														u.includes(
+															new URL(url)
+																.pathname
+														)
+													) {
 														//关闭之前点击开的页面
 													} else {
 														await p.close();
@@ -232,7 +237,7 @@ async function job_click(url, pptr, options = {}) {
 				await pptr.page.click(".ui-icon-arrow-right");
 				console.log(`点击下一页`);
 				await tool.sleep(10e3);
-				url = await pptr.page.url();
+				url = pptr.page.url();
 			}
 			console.log(`本轮共点击${job_apply_succ_counter}个职业卡片！`);
 		} else {
