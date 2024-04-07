@@ -18,10 +18,13 @@ const fs = require("fs");
  */
 async function main(pptr) {
 	try {
-		if ((await pptr.page.browser().pages()).length == 0) {
-			//浏览器已关闭
-			console.log(`浏览器已关闭！重启浏览器！`)
-			let bs = await launchBrowser("Browser_data", "Default");
+		if (pptr.page.isClosed()) {
+			let bs = pptr.page.browser();
+			if ((await pptr.page.browser().pages()).length == 0) {
+				//浏览器已关闭
+				console.log(`浏览器已关闭！重启浏览器！`);
+				bs = await launchBrowser("Browser_data", "Default");
+			}
 			let page = await bs.newPage();
 			pptr = new pptraction(page);
 		}

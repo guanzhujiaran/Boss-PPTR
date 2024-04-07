@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2023-07-23 23:47:08
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-03-28 13:35:10
+ * @LastEditTime: 2024-04-05 17:54:55
  * @FilePath: \Boss直聘爬虫\utl\boss_job_click.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -51,11 +51,12 @@ async function job_click(url, pptr, options = {}) {
 			let bs = pptr.page.browser();
 			let list_json_resp;
 			pptr.page.goto(url);
-			list_json_resp = await (
-				await pptr.page.waitForResponse((resp) =>
-					resp.url().includes("joblist.json?")
-				)
-			).json();
+			let __ = await pptr.page.waitForResponse(
+				(resp) =>
+					resp.url().includes("joblist.json?") &&
+					resp.status() === 200
+			);
+			list_json_resp = await __.json();
 			let pageSize = list_json_resp.zpData.pageSize
 				? list_json_resp.zpData.pageSize
 				: list_json_resp.zpData.jobList.length;
@@ -66,7 +67,8 @@ async function job_click(url, pptr, options = {}) {
 					1) /
 					pageSize
 			);
-			let now_url = await pptr.page.url();
+
+			let now_url = pptr.page.url();
 			if (
 				now_url.includes(
 					"https://www.zhipin.com/web/user/safe/verify-slider"
