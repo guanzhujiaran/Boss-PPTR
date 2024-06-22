@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2023-07-23 23:47:08
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-04-05 17:54:55
+ * @LastEditTime: 2024-05-13 22:49:37
  * @FilePath: \Boss直聘爬虫\utl\boss_job_click.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -32,7 +32,23 @@ const elementMap = {
 	chat_block_dialog: ".chat-block-dialog",
 	job_name: ".job-name",
 };
+/**
+ * 检查是否是相关页面
+ * @param {*} bs
+ * @param {*} url
+ */
+async function check_browser_pg_is_relative(bs, url) {
+	let origin_url = new URL(url);
 
+	for (let p of await bs.pages()) {
+		let u = new URL(p.url());
+		if (u.host === origin_url.host && u.pathname === origin_url.pathname) {
+			//关闭之前点击开的页面
+		} else {
+			await p.close();
+		}
+	}
+}
 /**
  * 在网站里面点击职业页面，然后关闭
  * @param {String} url
@@ -49,14 +65,27 @@ async function job_click(url, pptr, options = {}) {
 	try {
 		if (pptr && url) {
 			let bs = pptr.page.browser();
-			let list_json_resp;
 			pptr.page.goto(url);
-			let __ = await pptr.page.waitForResponse(
-				(resp) =>
-					resp.url().includes("joblist.json?") &&
-					resp.status() === 200
-			);
-			list_json_resp = await __.json();
+			let list_json_resp = await pptr.page
+				.waitForResponse(
+					(resp) =>
+						resp.url().includes("joblist.json?") &&
+						resp.status() === 200
+				)
+				.then(async (response) => {
+					return await response.json();
+				})
+				.catch((e) => {
+					console.error(`获取响应joblist.json失败！`, e);
+					return {
+						zpData: {
+							pageSize: 30,
+							totalCount: 30 * 10,
+							jobList: Array.from({ length: 30 }),
+						},
+					};
+				});
+
 			let pageSize = list_json_resp.zpData.pageSize
 				? list_json_resp.zpData.pageSize
 				: list_json_resp.zpData.jobList.length;
@@ -99,6 +128,7 @@ async function job_click(url, pptr, options = {}) {
 					.$$(elementMap.job_card)
 					.then(async (job_cards) => {
 						for (let job_card of job_cards) {
+							await check_browser_pg_is_relative(bs, url);
 							let job_name;
 							try {
 								job_name = await job_card.$eval(
@@ -106,7 +136,7 @@ async function job_click(url, pptr, options = {}) {
 									(_) => _.innerText
 								);
 							} catch (e) {
-								console.error(`获取职位名称失败！${e}`);
+								console.error(`获取职位名称失败！`, e);
 							}
 							if (
 								myconf &&
@@ -138,20 +168,16 @@ async function job_click(url, pptr, options = {}) {
 											.$(elementMap.start_chat_btn)
 											.then(async (btn) => {
 												await btn.click();
-												for (let p of await bs.pages()) {
-													let u = await p.url();
-													if (u.includes(url)) {
-														//关闭之前点击开的页面
-													} else {
-														await p.close();
-													}
-												}
 											})
 											.catch((err) => {
 												console.error(
 													`${job_name} 点击沟通职位失败！${err}`
 												);
 											});
+										await check_browser_pg_is_relative(
+											bs,
+											url
+										);
 										if (
 											(
 												await pptr.page.$$(
@@ -172,19 +198,6 @@ async function job_click(url, pptr, options = {}) {
 												`.greet-boss-container .icon-close`
 											)
 											.then(async (icon_close) => {
-												for (let p of await bs.pages()) {
-													let u = p.url();
-													if (
-														u.includes(
-															new URL(url)
-																.pathname
-														)
-													) {
-														//关闭之前点击开的页面
-													} else {
-														await p.close();
-													}
-												}
 												console.log(`点击了关闭提示框`);
 												await icon_close.click();
 											})
@@ -214,6 +227,9 @@ async function job_click(url, pptr, options = {}) {
 								}张职业卡片`
 							);
 						}
+					}).catch(async e=>{
+						console.log(`页面循环失败！`,e);
+						await check_browser_pg_is_relative(bs, url)
 					});
 				if ((await pptr.page.$$(`.side-slogan-box`)).length > 0) {
 					console.log(`账号未登录`);
@@ -228,25 +244,20 @@ async function job_click(url, pptr, options = {}) {
 					);
 					return;
 				}
-				for (let p of await bs.pages()) {
-					let u = await p.url();
-					if (u.includes(url)) {
-						//关闭之前点击开的页面
-					} else {
-						await p.close();
-					}
-				}
-				await pptr.page.click(".ui-icon-arrow-right");
+				await pptr.page
+					.waitForSelector(".ui-icon-arrow-right")
+					.then(async (btn) => await btn.click());
 				console.log(`点击下一页`);
 				await tool.sleep(10e3);
 				url = pptr.page.url();
 			}
 			console.log(`本轮共点击${job_apply_succ_counter}个职业卡片！`);
 		} else {
-			throw "invalid params!";
+			throw Error("invalid params!");
 		}
 	} catch (e) {
 		console.warn(e);
+		throw Error(e.message);
 	}
 }
 

@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2023-07-18 10:30:42
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-03-28 00:36:28
+ * @LastEditTime: 2024-05-15 11:05:29
  * @FilePath: \Boss直聘爬虫\index.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -17,17 +17,18 @@ const fs = require("fs");
  * @param {pptraction} pptr
  */
 async function main(pptr) {
-	try {
-		if (pptr.page.isClosed()) {
-			let bs = pptr.page.browser();
-			if ((await pptr.page.browser().pages()).length == 0) {
-				//浏览器已关闭
-				console.log(`浏览器已关闭！重启浏览器！`);
-				bs = await launchBrowser("Browser_data", "Default");
-			}
-			let page = await bs.newPage();
-			pptr = new pptraction(page);
+	if (pptr.page.isClosed()) {
+		let bs = pptr.page.browser();
+		let page_num = (await bs.pages()).length
+		if ( page_num == 0)	 {
+			//浏览器已关闭
+			console.log(`浏览器已关闭！重启浏览器！`);
+			bs = await launchBrowser("Browser_data", "Default");
 		}
+		let page = await bs.newPage();
+		pptr = new pptraction(page);
+	}
+	try {
 		let click_conf;
 		try {
 			click_conf = JSON.parse(
@@ -55,7 +56,10 @@ async function main(pptr) {
 		);
 		await pptr.goto("about:blank");
 	} catch (e) {
-		console.error(`执行失败！\n${e}`);
+		console.error(`执行失败！\n`,e);
+		if (pptr.page.isClosed()){
+			await main(pptr);
+		}
 	}
 	setTimeout(async () => {
 		await main(pptr);
